@@ -1,15 +1,16 @@
 #__________           _________              __  .__                      .__                   ________  ________ 
 #\______   \___.__.  /   _____/____    _____/  |_|__|____     ____   ____ |  | ___  ______  ___/  _____/ /  _____/ 
-# |    |  _<   |  |  \_____  \\__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___ 
+# |    |  _<   |  |  \_____  \__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___ 
 # |    |   \\___  |  /        \/ __ \|   |  \  | |  |/ __ \_/ /_/  >  <_> )  |__>    <  >    <\    \_\  \    \_\  \
 # |______  // ____| /_______  (____  /___|  /__| |__(____  /\___  / \____/|____/__/\_ \/__/\_ \\______  /\______  /
 #        \/ \/              \/     \/     \/             \//_____/                   \/      \/       \/        \/ 
+#Version 1.0.5
 #!/bin/bash
 
 # Interactive user prompts
 read -p "Enter the domain you want to use for Paymenter (e.g., paymenter.com): " domain
-read -p "Do you want to configure SSL automatically? (If you already have a certificate) (y/n): " configure_ssl
-read -p "Do you want to use an SSL certificate with Certbot? (y/n): " use_certbot
+read -p "Do you want to configure SSL automatically? (y/n): " configure_ssl
+read -p "Do you want to use an SSL certificate with Certbot? (If you don't have a certificate.) (y/n): " use_certbot
 
 # Domain validation
 if [ -z "$domain" ]; then
@@ -17,7 +18,7 @@ if [ -z "$domain" ]; then
     exit 1
 fi
 
-# Checking for openssl
+# OpenSSL verification
 if ! command -v openssl &> /dev/null; then
     echo "openssl is not installed. Please install it before proceeding."
     exit 1
@@ -44,7 +45,7 @@ if ! command -v nginx &> /dev/null; then
     apt -y install nginx
 fi
 
-# Checking for the existence of the /var/www/paymenter directory
+# Check for the existence of the /var/www/paymenter directory
 if [ -d "/var/www/paymenter" ]; then
     read -p "The /var/www/paymenter directory already exists. Do you want to delete it and continue? (y/n): " delete_existing
     if [ "$delete_existing" = "y" ]; then
@@ -56,7 +57,7 @@ if [ -d "/var/www/paymenter" ]; then
     fi
 fi
 
-# SSL Configuration
+# SSL configuration
 if [ "$configure_ssl" = "y" ]; then
     # Certbot installation
     apt -y install certbot python3-certbot-nginx
@@ -67,52 +68,60 @@ if [ "$configure_ssl" = "y" ]; then
     fi
 fi
 
-# Creating directory for Paymenter
+# Create directory for Paymenter
 mkdir /var/www/paymenter
 cd /var/www/paymenter
 
-# Downloading Paymenter
+# Download Paymenter
 curl -Lo paymenter.tar.gz https://github.com/paymenter/paymenter/releases/latest/download/paymenter.tar.gz
 tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 
-# Creating user and database in MySQL
-read -p "Enter the database name (press Enter to use 'paymenter'): " db_name
-db_name=${db_name:-paymenter}
-read -p "Enter the database username (press Enter to use 'paymenter'): " db_user
-db_user=${db_user:-paymenter}
-read -p "Enter the database password (press Enter to generate a random password): " db_password
-db_password=${db_password:-$(openssl rand -hex 16)}
+# Create user and database in MySQL
+read -p "Do you want an external host? (y/n): " external_host
+if [ "$external_host" = "y" ]; then
+    read -p "Enter the external host you want to use. If nothing is entered, it will default to 127.0.0.1: " ext_host
+    ext_host=${ext_host:-127.0.0.1}
+    read -p "Enter the database name (press Enter to use 'paymenter'): " db_name
+    db_name=${db_name:-paymenter}
+    read -p "Enter the database username (press Enter to use 'paymenter'): " db_user
+    db_user=${db_user:-paymenter}
+    read -p "Enter the database password (press Enter to generate a random password): " db_password
+    db_password=${db_password:-$(openssl rand -hex 16)}
+else
+    # The rest of the code for the database in the case of a local host
+fi
 
-# Creating user and database in MySQL
+# Create user and database in MySQL
 mysql -e "CREATE DATABASE IF NOT EXISTS $db_name;"
 mysql -e "CREATE USER IF NOT EXISTS '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
 mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
 
-# Configuring .env file
+# Configure .env file
 cp .env.example .env
 # Composer dependencies
 composer install --no-dev --optimize-autoloader
 
-# Editing .env file
+# Edit .env file
+sed -i "/^DB_HOST=/s/.*/DB_HOST=$ext_host/" .env
 sed -i "/^DB_DATABASE=/s/.*/DB_DATABASE=$db_name/" .env
 sed -i "/^DB_USERNAME=/s/.*/DB_USERNAME=$db_user/" .env
 sed -i "/^DB_PASSWORD=/s/.*/DB_PASSWORD=$db_password/" .env
 
-# Generating application key
+# Generate application key
 php artisan key:generate --force
 
-# Running migrations and seeders
+# Run migrations and seeders
 php artisan migrate --force --seed
 
-# Creating symbolic link for storage
+# Create symbolic link for storage
 php artisan storage:link
 
-# Creating password
+# Create user password
 php artisan p:user:create
 
-# Configuring Nginx
+# Configure Nginx
 nginx_conf="/etc/nginx/sites-available/paymenter.conf"
 echo "server {" > $nginx_conf
 echo "    listen 80;" >> $nginx_conf
@@ -127,11 +136,21 @@ if [ "$configure_ssl" = "y" ]; then
     echo "    listen 443 ssl http2;" >> $nginx_conf
     echo "    listen [::]:443 ssl http2;" >> $nginx_conf
     echo "    server_name $domain;" >> $nginx_conf
-    echo "" >> $nginx_conf
     echo "    root /var/www/paymenter/public;" >> $nginx_conf
+    echo "" >> $nginx_conf
     echo "    index index.php;" >> $nginx_conf
+    echo "" >> $nginx_conf
     echo "    ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;" >> $nginx_conf
     echo "    ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;" >> $nginx_conf
+    echo "" >> $nginx_conf
+    echo "    location / {" >> $nginx_conf
+    echo "        try_files \$uri \$uri/ /index.php?\$query_string;" >> $nginx_conf
+    echo "    }" >> $nginx_conf
+    echo "" >> $nginx_conf
+    echo "    location ~ \.php\$ {" >> $nginx_conf
+    echo "        include snippets/fastcgi-php.conf;" >> $nginx_conf
+    echo "        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;" >> $nginx_conf
+    echo "    }" >> $nginx_conf
 else
     echo "    root /var/www/paymenter/public;" >> $nginx_conf
     echo "    index index.php;" >> $nginx_conf
@@ -148,15 +167,15 @@ fi
 
 echo "}" >> $nginx_conf
 
-# Creating symbolic link and restarting Nginx
+# Create symbolic link and restart Nginx
 ln -s $nginx_conf /etc/nginx/sites-enabled/
 chown -R www-data:www-data /var/www/paymenter/*
 systemctl restart nginx
 
-# Adding cronjob for Laravel Scheduler
+# Add cronjob for Laravel Scheduler
 (crontab -l ; echo "* * * * * php /var/www/paymenter/artisan schedule:run >> /dev/null 2>&1") | crontab -
 
-# Configuring Paymenter service
+# Configure Paymenter service
 paymenter_service="/etc/systemd/system/paymenter.service"
 echo "[Unit]" > $paymenter_service
 echo "Description=Paymenter Queue Worker" >> $paymenter_service
@@ -173,7 +192,7 @@ echo "" >> $paymenter_service
 echo "[Install]" >> $paymenter_service
 echo "WantedBy=multi-user.target" >> $paymenter_service
 
-# Enabling and starting the Paymenter service
+# Enable and start Paymenter service
 systemctl enable --now paymenter
 
 # Completion message
