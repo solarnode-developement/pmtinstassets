@@ -8,8 +8,8 @@
 
 # Preguntas interactivas al usuario
 read -p "Ingresa el dominio que deseas utilizar en Paymenter (por ejemplo, paymenter.com): " domain
-read -p "¿Deseas configurar SSL automáticamente? (si ya tienes certificado) (y/n): " configure_ssl
-read -p "¿Quieres utilizar un certificado SSL con Certbot? (y/n): " use_certbot
+read -p "¿Deseas configurar SSL automáticamente? (y/n): " configure_ssl
+read -p "¿Quieres utilizar un certificado SSL con Certbot? (Si no tines certificado.) (y/n): " use_certbot
 
 # Validación del dominio
 if [ -z "$domain" ]; then
@@ -127,11 +127,21 @@ if [ "$configure_ssl" = "y" ]; then
     echo "    listen 443 ssl http2;" >> $nginx_conf
     echo "    listen [::]:443 ssl http2;" >> $nginx_conf
     echo "    server_name $domain;" >> $nginx_conf
-    echo "" >> $nginx_conf
     echo "    root /var/www/paymenter/public;" >> $nginx_conf
+    echo "" >> $nginx_conf
     echo "    index index.php;" >> $nginx_conf
+    echo "" >> $nginx_conf
     echo "    ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;" >> $nginx_conf
     echo "    ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;" >> $nginx_conf
+    echo "" >> $nginx_conf
+    echo "    location / {" >> $nginx_conf
+    echo "        try_files \$uri \$uri/ /index.php?\$query_string;" >> $nginx_conf
+    echo "    }" >> $nginx_conf
+    echo "" >> $nginx_conf
+    echo "    location ~ \.php\$ {" >> $nginx_conf
+    echo "        include snippets/fastcgi-php.conf;" >> $nginx_conf
+    echo "        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;" >> $nginx_conf
+    echo "    }" >> $nginx_conf
 else
     echo "    root /var/www/paymenter/public;" >> $nginx_conf
     echo "    index index.php;" >> $nginx_conf
