@@ -1,26 +1,25 @@
-#__________           _________              __  .__                      .__                   ________  ________ 
-#\______   \___.__.  /   _____/____    _____/  |_|__|____     ____   ____ |  | ___  ______  ___/  _____/ /  _____/ 
-# |    |  _<   |  |  \_____  \__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___ 
-# |    |   \\___  |  /        \/ __ \|   |  \  | |  |/ __ \_/ /_/  >  <_> )  |__>    <  >    <\    \_\  \    \_\  \
+#__________           _________              __  .__                      .__                   ________  ________
+#\______   \___.__.  /   _____/____    _____/  |_|__|____     ____   ____ |  | ___  ______  ___/  _____/ /  _____/
+# |    |  _<   |  |  \_____  \__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___
+# |    |   \___  |  /        \/ __ \|   |  \  | |  |/ __ \_/ /_/  >  <_> )  |__>    <  >    <\    \_\  \    \_\  \
 # |______  // ____| /_______  (____  /___|  /__| |__(____  /\___  / \____/|____/__/\_ \/__/\_ \\______  /\______  /
-#        \/ \/              \/     \/     \/             \//_____/                   \/      \/       \/        \/ 
-
+#        \/ \/              \/     \/     \/             \//_____/                   \/      \/       \/        \/
 #!/bin/bash
 
 # Interaktive Benutzerabfragen
-read -p "Geben Sie die Domain ein, die Sie für Paymenter verwenden möchten (z.B. paymenter.com): " domain
+read -p "Geben Sie die Domain ein, die Sie für Paymenter verwenden möchten (z. B. paymenter.org, billing.mycoolhost.com): " domain
 read -p "Möchten Sie SSL automatisch konfigurieren? (j/n): " configure_ssl
 read -p "Möchten Sie ein SSL-Zertifikat mit Certbot verwenden? (Wenn Sie kein Zertifikat haben.) (j/n): " use_certbot
 
-# Domänenvalidierung
+# Überprüfung der Domain
 if [ -z "$domain" ]; then
     echo "Die Domain darf nicht leer sein."
     exit 1
 fi
 
-# OpenSSL-Überprüfung
+# Überprüfung von openssl
 if ! command -v openssl &> /dev/null; then
-    echo "OpenSSL ist nicht installiert. Bitte installieren Sie es, bevor Sie fortfahren."
+    echo "openssl ist nicht installiert. Bitte installieren Sie es, bevor Sie fortfahren."
     exit 1
 fi
 
@@ -33,13 +32,13 @@ apt update
 
 apt -y install php8.2 php8.2-{common,cli,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server
 
-# Composer-Installation
+# Installation von Composer
 if ! command -v composer &> /dev/null; then
     echo "Installiere Composer..."
     curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
 fi
 
-# Nginx-Installation
+# Installation von Nginx
 if ! command -v nginx &> /dev/null; then
     echo "Installiere Nginx..."
     apt -y install nginx
@@ -50,7 +49,7 @@ if [ -d "/var/www/paymenter" ]; then
     read -p "Das Verzeichnis /var/www/paymenter existiert bereits. Möchten Sie es löschen und fortfahren? (j/n): " delete_existing
     if [ "$delete_existing" = "j" ]; then
         rm -rf /var/www/paymenter
-        echo "Vorhandenes Verzeichnis gelöscht."
+        echo "Bestehendes Verzeichnis gelöscht."
     else
         echo "Vorgang abgebrochen. Es wurden keine Änderungen vorgenommen."
         exit 1
@@ -78,25 +77,23 @@ tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 
 # Benutzer und Datenbank in MySQL erstellen
-read -p "Möchten Sie einen externen Host? (j/n): " external_host
+read -p "Möchten Sie einen externen Host verwenden? (j/n): " external_host
 if [ "$external_host" = "j" ]; then
-    read -p "Geben Sie den externen Host ein, den Sie verwenden möchten. Wenn Sie nichts eingeben, wird er automatisch auf 127.0.0.1 festgelegt: " ext_host
+    read -p "Geben Sie den externen Host ein, den Sie verwenden möchten. Wenn Sie nichts eingeben, wird automatisch 127.0.0.1 festgelegt: " ext_host
     ext_host=${ext_host:-127.0.0.1}
-    read -p "Geben Sie den Datenbanknamen ein (Drücken Sie die Eingabetaste, um 'paymenter' zu verwenden): " db_name
+    read -p "Geben Sie den Datenbanknamen ein (drücken Sie Enter, um 'paymenter' zu verwenden): " db_name
     db_name=${db_name:-paymenter}
-    read -p "Geben Sie den Datenbankbenutzernamen ein (Drücken Sie die Eingabetaste, um 'paymenter' zu verwenden): " db_user
+    read -p "Geben Sie den Datenbankbenutzernamen ein (drücken Sie Enter, um 'paymenter' zu verwenden): " db_user
     db_user=${db_user:-paymenter}
-    read -p "Geben Sie das Datenbankpasswort ein (Drücken Sie die Eingabetaste, um ein zufälliges Passwort zu generieren): " db_password
+    read -p "Geben Sie das Datenbankpasswort ein (drücken Sie Enter, um ein zufälliges Passwort zu generieren): " db_password
     db_password=${db_password:-$(openssl rand -hex 16)}
 else
-    # Der Rest des Codes für die Datenbank im Fall eines lokalen Hosts
-fi
-
 # Benutzer und Datenbank in MySQL erstellen
 mysql -e "CREATE DATABASE IF NOT EXISTS $db_name;"
 mysql -e "CREATE USER IF NOT EXISTS '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
 mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
+fi
 
 # .env-Datei konfigurieren
 cp .env.example .env
@@ -115,7 +112,7 @@ php artisan key:generate --force
 # Migrationen und Seeder ausführen
 php artisan migrate --force --seed
 
-# Symbolischen Link für die Speicherung erstellen
+# Symbolischen Link für den Speicher erstellen
 php artisan storage:link
 
 # Passwort erstellen
@@ -175,7 +172,7 @@ systemctl restart nginx
 # Cronjob für Laravel Scheduler hinzufügen
 (crontab -l ; echo "* * * * * php /var/www/paymenter/artisan schedule:run >> /dev/null 2>&1") | crontab -
 
-# Paymenter-Service konfigurieren
+# Paymenter-Dienst konfigurieren
 paymenter_service="/etc/systemd/system/paymenter.service"
 echo "[Unit]" > $paymenter_service
 echo "Description=Paymenter Queue Worker" >> $paymenter_service
@@ -192,13 +189,13 @@ echo "" >> $paymenter_service
 echo "[Install]" >> $paymenter_service
 echo "WantedBy=multi-user.target" >> $paymenter_service
 
-# Paymenter-Service aktivieren und starten
+# Paymenter-Dienst aktivieren und starten
 systemctl enable --now paymenter
 
-# Abschlussnachricht
+# Abschlussmeldung
 if [ "$configure_ssl" = "j" ]; then
-    echo "Ihre Paymenter-Installation ist unter https://$domain verfügbar"
+    echo "Ihre Paymenter-Installation ist unter folgender Adresse verfügbar: https://$domain"
 else
-    echo "Ihre Paymenter-Installation ist unter http://$domain verfügbar"
+    echo "Ihre Paymenter-Installation ist unter folgender Adresse verfügbar: http://$domain"
 fi
-echo "Vielen Dank für die Verwendung dieses Skripts!"
+echo "Vielen Dank, dass Sie dieses Skript verwenden!"
