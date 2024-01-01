@@ -1,14 +1,13 @@
-#__________           _________              __  .__                      .__                   ________  ________ 
-#\______   \___.__.  /   _____/____    _____/  |_|__|____     ____   ____ |  | ___  ______  ___/  _____/ /  _____/ 
-# |    |  _<   |  |  \_____  \__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___ 
-# |    |   \\___  |  /        \/ __ \|   |  \  | |  |/ __ \_/ /_/  >  <_> )  |__>    <  >    <\    \_\  \    \_\  \
+#__________           _________              __  .__                      .__                   ________  ________
+#\______   \___.__.  /   _____/____    _____/  |_|__|____     ____   ____ |  | ___  ______  ___/  _____/ /  _____/
+# |    |  _<   |  |  \_____  \__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___
+# |    |   \___  |  /        \/ __ \|   |  \  | |  |/ __ \_/ /_/  >  <_> )  |__>    <  >    <\    \_\  \    \_\  \
 # |______  // ____| /_______  (____  /___|  /__| |__(____  /\___  / \____/|____/__/\_ \/__/\_ \\______  /\______  /
-#        \/ \/              \/     \/     \/             \//_____/                   \/      \/       \/        \/ 
-#Version 1.0.5
+#        \/ \/              \/     \/     \/             \//_____/                   \/      \/       \/        \/
 #!/bin/bash
 
 # Interactive user prompts
-read -p "Enter the domain you want to use for Paymenter (e.g., paymenter.com): " domain
+read -p "Enter the domain you want to use for Paymenter (e.g., paymenter.org, billing.mycoolhost.com): " domain
 read -p "Do you want to configure SSL automatically? (y/n): " configure_ssl
 read -p "Do you want to use an SSL certificate with Certbot? (If you don't have a certificate.) (y/n): " use_certbot
 
@@ -18,9 +17,9 @@ if [ -z "$domain" ]; then
     exit 1
 fi
 
-# OpenSSL verification
+# openssl check
 if ! command -v openssl &> /dev/null; then
-    echo "openssl is not installed. Please install it before proceeding."
+    echo "openssl is not installed. Please install it before continuing."
     exit 1
 fi
 
@@ -45,9 +44,9 @@ if ! command -v nginx &> /dev/null; then
     apt -y install nginx
 fi
 
-# Check for the existence of the /var/www/paymenter directory
+# Check the existence of the /var/www/paymenter directory
 if [ -d "/var/www/paymenter" ]; then
-    read -p "The /var/www/paymenter directory already exists. Do you want to delete it and continue? (y/n): " delete_existing
+    read -p "The directory /var/www/paymenter already exists. Do you want to delete it and proceed? (y/n): " delete_existing
     if [ "$delete_existing" = "y" ]; then
         rm -rf /var/www/paymenter
         echo "Existing directory deleted."
@@ -57,7 +56,7 @@ if [ -d "/var/www/paymenter" ]; then
     fi
 fi
 
-# SSL configuration
+# SSL Configuration
 if [ "$configure_ssl" = "y" ]; then
     # Certbot installation
     apt -y install certbot python3-certbot-nginx
@@ -80,7 +79,7 @@ chmod -R 755 storage/* bootstrap/cache/
 # Create user and database in MySQL
 read -p "Do you want an external host? (y/n): " external_host
 if [ "$external_host" = "y" ]; then
-    read -p "Enter the external host you want to use. If nothing is entered, it will default to 127.0.0.1: " ext_host
+    read -p "Enter the external host you want to use. If you leave it blank, it will default to 127.0.0.1: " ext_host
     ext_host=${ext_host:-127.0.0.1}
     read -p "Enter the database name (press Enter to use 'paymenter'): " db_name
     db_name=${db_name:-paymenter}
@@ -89,14 +88,12 @@ if [ "$external_host" = "y" ]; then
     read -p "Enter the database password (press Enter to generate a random password): " db_password
     db_password=${db_password:-$(openssl rand -hex 16)}
 else
-    # The rest of the code for the database in the case of a local host
-fi
-
 # Create user and database in MySQL
 mysql -e "CREATE DATABASE IF NOT EXISTS $db_name;"
 mysql -e "CREATE USER IF NOT EXISTS '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
 mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
+fi
 
 # Configure .env file
 cp .env.example .env
@@ -118,7 +115,7 @@ php artisan migrate --force --seed
 # Create symbolic link for storage
 php artisan storage:link
 
-# Create user password
+# Create password
 php artisan p:user:create
 
 # Configure Nginx
@@ -192,7 +189,7 @@ echo "" >> $paymenter_service
 echo "[Install]" >> $paymenter_service
 echo "WantedBy=multi-user.target" >> $paymenter_service
 
-# Enable and start Paymenter service
+# Enable and start the Paymenter service
 systemctl enable --now paymenter
 
 # Completion message
