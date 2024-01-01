@@ -113,7 +113,7 @@ php artisan storage:link
 php artisan p:user:create
 
 # Configurar Nginx
-nginx_conf="/etc/nginx/sites-available/paymenter"
+nginx_conf="/etc/nginx/sites-available/paymenter.conf"
 echo "server {" > $nginx_conf
 echo "    listen 80;" >> $nginx_conf
 echo "    listen [::]:80;" >> $nginx_conf
