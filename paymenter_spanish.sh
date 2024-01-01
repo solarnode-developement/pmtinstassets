@@ -7,7 +7,7 @@
 #!/bin/bash
 
 # Preguntas interactivas al usuario
-read -p "Ingresa el dominio que deseas utilizar en Paymenter (por ejemplo, paymenter.com): " domain
+read -p "Ingresa el dominio que deseas utilizar en Paymenter (por ejemplo, paymenter.org, billing.mycoolhost.com): " domain
 read -p "¿Deseas configurar SSL automáticamente? (y/n): " configure_ssl
 read -p "¿Quieres utilizar un certificado SSL con Certbot? (Si no tines certificado.) (y/n): " use_certbot
 
@@ -77,12 +77,19 @@ tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 
 # Crear usuario y base de datos en MySQL
-read -p "Ingresa el nombre de la base de datos (presiona Enter para usar 'paymenter'): " db_name
-db_name=${db_name:-paymenter}
-read -p "Ingresa el nombre de usuario de la base de datos (presiona Enter para usar 'paymenter'): " db_user
-db_user=${db_user:-paymenter}
-read -p "Ingresa la contraseña de la base de datos (presiona Enter para generar una contraseña aleatoria): " db_password
-db_password=${db_password:-$(openssl rand -hex 16)}
+read -p "¿Quieres un host externo? (y/n): " external_host
+if [ "$external_host" = "y" ]; then
+    read -p "Introduce el host externo que quieres usar. Si no pones nada, se pondrá automáticamente 127.0.0.1: " ext_host
+    ext_host=${ext_host:-127.0.0.1}
+    read -p "Ingresa el nombre de la base de datos (presiona Enter para usar 'paymenter'): " db_name
+    db_name=${db_name:-paymenter}
+    read -p "Ingresa el nombre de usuario de la base de datos (presiona Enter para usar 'paymenter'): " db_user
+    db_user=${db_user:-paymenter}
+    read -p "Ingresa la contraseña de la base de datos (presiona Enter para generar una contraseña aleatoria): " db_password
+    db_password=${db_password:-$(openssl rand -hex 16)}
+else
+    # El resto del código para la base de datos en el caso de host local
+fi
 
 # Creación de usuario y base de datos en MySQL
 mysql -e "CREATE DATABASE IF NOT EXISTS $db_name;"
@@ -96,6 +103,7 @@ cp .env.example .env
 composer install --no-dev --optimize-autoloader
 
 # Edición del archivo .env
+sed -i "/^DB_HOST=/s/.*/DB_HOST=$ext_host/" .env
 sed -i "/^DB_DATABASE=/s/.*/DB_DATABASE=$db_name/" .env
 sed -i "/^DB_USERNAME=/s/.*/DB_USERNAME=$db_user/" .env
 sed -i "/^DB_PASSWORD=/s/.*/DB_PASSWORD=$db_password/" .env
