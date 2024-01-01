@@ -1,14 +1,8 @@
-#__________           _________              __  .__                      .__                   ________  ________ 
-#\______   \___.__.  /   _____/____    _____/  |_|__|____     ____   ____ |  | ___  ______  ___/  _____/ /  _____/ 
-# |    |  _<   |  |  \_____  \\__  \  /    \   __\  \__  \   / ___\ /  _ \|  | \  \/  /\  \/  /   \  ___/   \  ___ 
-# |    |   \\___  |  /        \/ __ \|   |  \  | |  |/ __ \_/ /_/  >  <_> )  |__>    <  >    <\    \_\  \    \_\  \
-# |______  // ____| /_______  (____  /___|  /__| |__(____  /\___  / \____/|____/__/\_ \/__/\_ \\______  /\______  /
-#        \/ \/              \/     \/     \/             \//_____/                   \/      \/       \/        \/ 
 #!/bin/bash
 
 # Preguntas interactivas al usuario
 read -p "Ingresa el dominio que deseas utilizar en Paymenter (por ejemplo, paymenter.com): " domain
-read -p "¿Deseas configurar SSL automáticamente? (y/n): " configure_ssl
+read -p "¿Deseas configurar SSL automáticamente? (si ya tienes certificado) (y/n): " configure_ssl
 read -p "¿Quieres utilizar un certificado SSL con Certbot? (y/n): " use_certbot
 
 # Validación del dominio
@@ -130,7 +124,6 @@ if [ "$configure_ssl" = "y" ]; then
     echo "" >> $nginx_conf
     echo "    root /var/www/paymenter/public;" >> $nginx_conf
     echo "    index index.php;" >> $nginx_conf
-    echo "" >> $nginx_conf
     echo "    ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;" >> $nginx_conf
     echo "    ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;" >> $nginx_conf
 else
