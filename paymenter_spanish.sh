@@ -74,7 +74,6 @@ tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 
 # Crear usuario y base de datos en MySQL
-read -p "¿Quieres un host externo? (s/n): " host_externo
 read -p "Ingresa el nombre de la base de datos (presiona Enter para usar 'paymenter'): " db_name
 db_name=${db_name:-paymenter}
 read -p "Ingresa el nombre de usuario de la base de datos (presiona Enter para usar 'paymenter'): " db_user
