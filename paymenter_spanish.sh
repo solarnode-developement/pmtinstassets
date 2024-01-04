@@ -110,6 +110,10 @@ php artisan storage:link
 # Crear contraseña
 php artisan p:user:create
 
+# eliminar archivo default de nginx
+rm /etc/nginx/sites-available/default.conf
+rm /etc/nginx/sites-enabled/default.conf
+
 # Configurar Nginx
 nginx_conf="/etc/nginx/sites-available/paymenter.conf"
 echo "server {" > $nginx_conf
