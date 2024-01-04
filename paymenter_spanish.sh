@@ -86,8 +86,8 @@ if [ "$host_externo" = "s" ]; then
     db_password=${db_password:-$(openssl rand -hex 16)}
 else
     # Crear usuario y base de datos en MySQL
-    mysql -e "CREATE DATABASE IF NOT EXISTS $db_name;"
-    mysql -e "CREATE USER IF NOT EXISTS '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
+    mysql -e "CREATE DATABASE $db_name;"
+    mysql -e "CREATE USER '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
     mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
     mysql -e "FLUSH PRIVILEGES;"
 fi
