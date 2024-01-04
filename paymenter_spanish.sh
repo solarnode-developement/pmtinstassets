@@ -75,22 +75,19 @@ chmod -R 755 storage/* bootstrap/cache/
 
 # Crear usuario y base de datos en MySQL
 read -p "¿Quieres un host externo? (s/n): " host_externo
-if [ "$host_externo" = "s" ]; then
-    read -p "Ingresa el host externo que deseas usar. Si lo dejas en blanco, se utilizará 127.0.0.1: " ext_host
-    ext_host=${ext_host:-127.0.0.1}
-    read -p "Ingresa el nombre de la base de datos (presiona Enter para usar 'paymenter'): " db_name
-    db_name=${db_name:-paymenter}
-    read -p "Ingresa el nombre de usuario de la base de datos (presiona Enter para usar 'paymenter'): " db_user
-    db_user=${db_user:-paymenter}
-    read -p "Ingresa la contraseña de la base de datos (presiona Enter para generar una contraseña aleatoria): " db_password
-    db_password=${db_password:-$(openssl rand -hex 16)}
-else
+read -p "Ingresa el nombre de la base de datos (presiona Enter para usar 'paymenter'): " db_name
+db_name=${db_name:-paymenter}
+read -p "Ingresa el nombre de usuario de la base de datos (presiona Enter para usar 'paymenter'): " db_user
+db_user=${db_user:-paymenter}
+read -p "Ingresa la contraseña de la base de datos (presiona Enter para generar una contraseña aleatoria): " db_password
+db_password=${db_password:-$(openssl rand -hex 16)}
+
     # Crear usuario y base de datos en MySQL
-    mysql -e "CREATE DATABASE $db_name;"
-    mysql -e "CREATE USER '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
-    mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
-    mysql -e "FLUSH PRIVILEGES;"
-fi
+mysql -e "CREATE DATABASE $db_name;"
+mysql -e "CREATE USER '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
+mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
+mysql -e "FLUSH PRIVILEGES;"
+
 
 # Configurar archivo .env
 cp .env.example .env
