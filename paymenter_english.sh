@@ -7,7 +7,7 @@
 #!/bin/bash
 
 # Interactive user prompts
-read -p "Enter the domain you want to use for Paymenter (e.g., paymenter.org, billing.mycoolhost.com): " domain
+read -p "Enter the domain you want to use for Paymenter (example: paymenter.org, billing.mycoolhost.com): " domain
 read -p "Do you want to configure SSL automatically? (y/n): " configure_ssl
 read -p "Do you want to use an SSL certificate with Certbot? (If you don't have a certificate.) (y/n): " use_certbot
 
