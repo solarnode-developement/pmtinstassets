@@ -125,7 +125,7 @@ echo "    listen 80;" >> $nginx_conf
 echo "    listen [::]:80;" >> $nginx_conf
 echo "    server_name $domain;" >> $nginx_conf
 echo "    return 301 https://\$host\$request_uri;" >> $nginx_conf
-    echo "}" >> $nginx_conf
+echo "}" >> $nginx_conf
     if [ "$configure_ssl" = "y" ]; then
     echo "" >> $nginx_conf
     echo "server {" >> $nginx_conf
