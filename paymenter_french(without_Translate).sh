@@ -107,7 +107,6 @@ cp .env.example .env
 composer install --no-dev --optimize-autoloader
 
 # Edit .env file
-sed -i "/^DB_HOST=/s/.*/DB_HOST=$ext_host/" .env
 sed -i "/^DB_DATABASE=/s/.*/DB_DATABASE=$db_name/" .env
 sed -i "/^DB_USERNAME=/s/.*/DB_USERNAME=$db_user/" .env
 sed -i "/^DB_PASSWORD=/s/.*/DB_PASSWORD=$db_password/" .env
