@@ -77,23 +77,18 @@ tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 
 # Create user and database in MySQL
-read -p "Do you want an external host? (y/n): " external_host
-if [ "$external_host" = "y" ]; then
-    read -p "Enter the external host you want to use. If you leave it blank, it will default to 127.0.0.1: " ext_host
-    ext_host=${ext_host:-127.0.0.1}
     read -p "Enter the database name (press Enter to use 'paymenter'): " db_name
     db_name=${db_name:-paymenter}
     read -p "Enter the database username (press Enter to use 'paymenter'): " db_user
     db_user=${db_user:-paymenter}
     read -p "Enter the database password (press Enter to generate a random password): " db_password
     db_password=${db_password:-$(openssl rand -hex 16)}
-else
 # Create user and database in MySQL
 mysql -e "CREATE DATABASE IF NOT EXISTS $db_name;"
 mysql -e "CREATE USER IF NOT EXISTS '$db_user'@'localhost' IDENTIFIED BY '$db_password';"
 mysql -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
-fi
+
 
 # Configure .env file
 cp .env.example .env
