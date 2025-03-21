@@ -72,7 +72,7 @@ mkdir /var/www/paymenter
 cd /var/www/paymenter
 
 # Download Paymenter
-curl -Lo paymenter.tar.gz https://github.com/paymenter/paymenter/releases/latest/download/paymenter.tar.gz
+curl -Lo paymenter.tar.gz https://api.paymenter.org/beta
 tar -xzvf paymenter.tar.gz
 chmod -R 755 storage/* bootstrap/cache/
 
