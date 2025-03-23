@@ -30,8 +30,7 @@ LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 
 apt update
 
-apt -y install php8.3 php8.3-{common,cli,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server
-
+apt -y install php8.3 php8.3-{common,cli,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip,intl,redis} mariadb-server nginx tar unzip git redis-server
 # Composer installation
 if ! command -v composer &> /dev/null; then
     echo "Installing Composer..."
