@@ -109,8 +109,11 @@ php artisan migrate --force --seed
 # Create symbolic link for storage
 php artisan storage:link
 
+# Initiate Stuffs
+php artisan app:init
+
 # Create password
-php artisan p:user:create
+php artisan app:user:create
 
 # Configure Nginx
 nginx_conf="/etc/nginx/sites-available/paymenter.conf"
@@ -151,7 +154,7 @@ else
     echo "" >> $nginx_conf
     echo "    location ~ \.php\$ {" >> $nginx_conf
     echo "        include snippets/fastcgi-php.conf;" >> $nginx_conf
-    echo "        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;" >> $nginx_conf
+    echo "        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;" >> $nginx_conf
     echo "    }" >> $nginx_conf
 fi
 
