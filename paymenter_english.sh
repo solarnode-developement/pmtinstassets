@@ -141,7 +141,7 @@ echo "}" >> $nginx_conf
     echo "" >> $nginx_conf
     echo "    location ~ \.php\$ {" >> $nginx_conf
     echo "        include snippets/fastcgi-php.conf;" >> $nginx_conf
-    echo "        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;" >> $nginx_conf
+    echo "        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;" >> $nginx_conf
     echo "    }" >> $nginx_conf
 else
     echo "    root /var/www/paymenter/public;" >> $nginx_conf
